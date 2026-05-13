@@ -12,7 +12,7 @@ base_thickness = 2.5;
 
 // Thick Section (Front face, right side)
 // This is the raised pad the screws go through
-thick_width = 10.0;        // Scaled to fit the 18mm total width
+thick_width = 6.35;        // Scaled to fit the 18mm total width
 thick_extra = 3.175;       // 0.125 inches protrusion
 total_thickness = base_thickness + thick_extra;
 
