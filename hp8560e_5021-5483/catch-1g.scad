@@ -17,10 +17,10 @@ thick_extra = 3.175;       // 0.125 inches protrusion
 total_thickness = base_thickness + thick_extra;
 
 // Catch Section (Back face, left edge)
-catch_depth = 6.0;     // How far back it extends from the base plate
-catch_wall_thickness = 2.5; 
-catch_lip_width = 3.0; // Overhang hooking inwards (to the right)
-catch_lip_thickness = 2.0;
+catch_depth = 3.0;     // How far back it extends from the base plate
+catch_wall_thickness = 1.0; 
+catch_lip_width = 1.0; // Overhang hooking inwards (to the right)
+catch_lip_thickness = 1.0;
 
 $fn = 64; // High resolution for smooth holes
 
