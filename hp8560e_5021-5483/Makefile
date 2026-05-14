@@ -6,7 +6,7 @@ OPENSCAD   := openscad
 all: $(STL_FILES)
 
 %.stl: %.scad
-	$(OPENSCAD) -o $@ $<
+	$(OPENSCAD) --export-format binstl -o $@ $<
 
 clean:
 	rm -f $(STL_FILES)
