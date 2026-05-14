@@ -6,7 +6,7 @@ hole_spacing = 25.4;       // 1 inch exact spacing
 screw_clearance_dia = 2.8; // M2.5 clearance
 
 // Base Rectangular Body
-total_width = 18.0;        // 18mm wide
+total_width = 17.0;        // 18mm wide
 total_height = 38.1;       // 1.5 inches long (tall)
 base_thickness = 2.5;
 
