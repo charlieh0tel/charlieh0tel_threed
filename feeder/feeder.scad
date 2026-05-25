@@ -1,129 +1,206 @@
 // --- PRECISE ONEISALL 5L RECTANGULAR HOPPER DIMENSIONS ---
-tank_width = 180;         // Left-to-right straight width (mm)
-tank_depth = 175;         // Front-to-back straight depth (mm)
-tank_corner_radius = 12;  // The actual sharp corner roundness radius (mm)
-clamp_height = 36;        // Vertical height of clamp ring (mm)
-wall_thickness = 8;       // Structural load thickness (mm)
-clearance = 1.5;          // Tolerance gap for easy placement
-screw_hole_dia = 5.0;     // #10 Wall screw sizing for backplate
+tank_width         = 180;  // Left-to-right straight width (mm)
+tank_depth         = 175;  // Front-to-back straight depth (mm)
+tank_corner_radius = 12;   // Corner roundness radius (mm)
+clamp_height       = 36;   // Vertical height of clamp ring (mm)
+wall_thickness     = 8;    // Structural load thickness (mm)
+clearance          = 1.5;  // Tolerance gap for easy placement (mm)
+backplate_offset   = 4;    // Extra Y gap between collar rear and backplate (mm)
+screw_hole_dia     = 5.0;  // #10 wall screw diameter (mm)
 
 // --- VERTICAL DROP PIN SETTINGS ---
-pin_hole_dia = 5.5;       // Enclosed hole diameter for the drop-pin
-pin_clearance = 0.4;      // Vertical wiggle room for smooth interlocking
+pin_hole_dia  = 5.5;  // Enclosed hole diameter for the drop-pin (mm)
+pin_clearance = 0.4;  // Vertical clearance so middle ear slides freely (mm)
 
 // --- HINGE SMOOTHING ---
-ear_corner_radius = 5;    // Smooth radius for the outer hinge corners (mm)
+ear_corner_radius = 5;  // Rounded radius for outer hinge knuckle corners (mm)
 
-/* [Hidden Internal Calculations] */
+// --- PART SELECTOR ---
+// Uncomment the line you want to render:
+/* [Part] */
+part = "back_wall_mount"; // ["back_wall_mount", "front_clamp", "print_pins"]
+// part = "front_clamp";
+// part = "print_pins";
+
+// --- RENDER QUALITY ---
+// $fn = 20 for fast preview; 80 for final export.
 $fn = 80;
-w_inner = tank_width + clearance*2;
-d_inner = tank_depth + clearance*2;
+
+/* [Hidden] */
+// ---------- derived values ----------
+w_inner = tank_width  + clearance * 2;
+d_inner = tank_depth  + clearance * 2;
+
 ear_width = 16;
-ear_depth = 26; // Spans across the center line to ensure full loops
+ear_depth = 26;  // straddles the split line so both halves get full knuckle
 
-// --- CONVENIENT EXPORT TOGGLE ---
-// Uncomment the line you want to render, leave the others commented out:
-part = "back_wall_mount"; 
-// part = "front_clamp"; 
-// part = "print_pins"; 
+// Knuckle layer heights
+knuckle_layer_h = clamp_height / 3;               // 12 mm at defaults
+middle_ear_h    = knuckle_layer_h - pin_clearance; // 11.6 mm — vertical clearance
 
+// Bisection cut half-extent: must clear the full outer collar radius plus margin.
+bisect_half = d_inner / 2 + wall_thickness * 2 + 30;
+
+// Repeated X centre for ears and pin holes (same for both parts)
+ear_x = w_inner / 2 + wall_thickness + ear_width / 2;
+
+// Backplate Y centre
+backplate_y = -(d_inner / 2 + wall_thickness + backplate_offset);
+
+
+// ---------- dispatch ----------
 if (part == "back_wall_mount") back_wall_mount();
-if (part == "front_clamp") front_clamp();
-if (part == "print_pins") print_pins();
+if (part == "front_clamp")     front_clamp();
+if (part == "print_pins")      print_pins();
 
-// --- CORE FRAME GENERATOR ---
+
+// ============================================================
+// CORE FRAME GENERATOR
+//
+// Minkowski cylinder uses h=0.001 (effectively a 2D disk) so the
+// sum produces flat top/bottom faces with only XY corner rounding.
+// A finite h=1 cylinder would add an unwanted Z chamfer on both
+// the outer and inner walls.
+// ============================================================
 module raw_collar_profile(w, d, r, wall) {
     difference() {
         minkowski() {
             cube([w + wall*2 - r*2, d + wall*2 - r*2, clamp_height - 1], center=true);
-            cylinder(r=r, h=1, center=true);
+            cylinder(r=r, h=0.001, center=true);
         }
         minkowski() {
             cube([w - r*2, d - r*2, clamp_height + 5], center=true);
-            cylinder(r=r, h=1, center=true);
+            cylinder(r=r, h=0.001, center=true);
         }
     }
 }
 
-// --- GENERATOR FOR SMOOTH OUTER HINGE PROFILE ---
+
+// ============================================================
+// ROUNDED HINGE KNUCKLE PROFILE
+//
+// Generates a D-shaped knuckle block: flat inner face (glues to
+// collar body) and rounded outer corners.  x_sign drives which
+// direction the rounded face points (+1 = right, -1 = left).
+// ============================================================
 module ear_knuckle_profile(w, d, h, r, x_sign) {
     linear_extrude(height = h, center = true) {
         hull() {
-            // Inner face (flat attachment to main body)
+            // Inner flat edge — thin strip at the collar-facing side
             translate([-x_sign * w/2, -d/2]) square([0.1, d]);
-            // Outer smooth rounded corners
+            // Outer rounded corners
             translate([x_sign * (w/2 - r), -d/2 + r]) circle(r);
-            translate([x_sign * (w/2 - r), d/2 - r]) circle(r);
+            translate([x_sign * (w/2 - r),  d/2 - r]) circle(r);
         }
     }
 }
 
-// --- PART 1: BACK WALL MOUNT (Top & Bottom Enclosed Knuckles) ---
+
+// ============================================================
+// PART 1 — BACK WALL MOUNT
+// Top knuckle: centred at z = +knuckle_layer_h, height knuckle_layer_h
+//              → spans z = +knuckle_layer_h/2 .. +3*knuckle_layer_h/2
+// Bottom knuckle: centred at z = -knuckle_layer_h, same height
+//              → spans z = -3*knuckle_layer_h/2 .. -knuckle_layer_h/2
+// Centre slot (z = ±knuckle_layer_h/2) receives the front clamp ear.
+// ============================================================
 module back_wall_mount() {
     difference() {
         union() {
-            // Cut ONLY the collar frame in half (keeps Y < 0)
+            // Rear half of collar (Y ≤ 0)
             difference() {
                 raw_collar_profile(w_inner, d_inner, tank_corner_radius, wall_thickness);
-                translate([0, d_inner, 0]) cube([w_inner*3, d_inner*2, clamp_height + 40], center=true);
+                translate([0, bisect_half, 0])
+                    cube([w_inner*3, bisect_half*2, clamp_height + 40], center=true);
             }
-            
-            // Wall mounting backplate
-            translate([0, -(d_inner/2 + wall_thickness + 4), 0])
-                cube([w_inner + wall_thickness*2 + 40, 8, clamp_height + 15], center=true);
-                
-            // Top and Bottom Rounded Ear Blocks
-            for (x_sign = [-1, 1]) {
-                // Top Knuckle Layer
-                translate([x_sign * (w_inner/2 + wall_thickness + ear_width/2), 0, clamp_height/3])
-                    ear_knuckle_profile(ear_width, ear_depth, clamp_height/3, ear_corner_radius, x_sign);
-                // Bottom Knuckle Layer
-                translate([x_sign * (w_inner/2 + wall_thickness + ear_width/2), 0, -clamp_height/3])
-                    ear_knuckle_profile(ear_width, ear_depth, clamp_height/3, ear_corner_radius, x_sign);
-            }
-        }
-        
-        // Wall Plate Mounting Screw Holes
-        translate([-(w_inner/2 + 12), -(d_inner/2 + wall_thickness + 4), 0]) rotate([-90,0,0]) cylinder(h=20, d=screw_hole_dia, center=true);
-        translate([(w_inner/2 + 12), -(d_inner/2 + wall_thickness + 4), 0]) rotate([-90,0,0]) cylinder(h=20, d=screw_hole_dia, center=true);
-        
-        // Fully enclosed vertical pin holes
-        translate([-(w_inner/2 + wall_thickness + ear_width/2), 0, 0]) cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
-        translate([(w_inner/2 + wall_thickness + ear_width/2), 0, 0]) cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
-    }
-}
 
-// --- PART 2: FRONT CLAMP RETAINER (Middle Enclosed Knuckle) ---
-module front_clamp() {
-    difference() {
-        union() {
-            // Cut ONLY the collar frame in half (keeps Y > 0)
-            difference() {
-                raw_collar_profile(w_inner, d_inner, tank_corner_radius, wall_thickness);
-                translate([0, -d_inner, 0]) cube([w_inner*3, d_inner*2, clamp_height + 40], center=true);
-            }
-            
-            // Middle Rounded Ear Blocks
+            // Backplate
+            translate([0, backplate_y, 0])
+                cube([w_inner + wall_thickness*2 + 40, 8, clamp_height + 15], center=true);
+
+            // Top and bottom rounded knuckle blocks
             for (x_sign = [-1, 1]) {
-                translate([x_sign * (w_inner/2 + wall_thickness + ear_width/2), 0, 0]) {
-                    ear_knuckle_profile(ear_width, ear_depth, (clamp_height/3) - pin_clearance, ear_corner_radius, x_sign);
+                translate([x_sign * ear_x, 0, 0]) {
+                    // Top layer
+                    translate([0, 0,  knuckle_layer_h])
+                        ear_knuckle_profile(ear_width, ear_depth, knuckle_layer_h,
+                                            ear_corner_radius, x_sign);
+                    // Bottom layer
+                    translate([0, 0, -knuckle_layer_h])
+                        ear_knuckle_profile(ear_width, ear_depth, knuckle_layer_h,
+                                            ear_corner_radius, x_sign);
                 }
             }
         }
-        
-        // Fully enclosed vertical pin holes
-        translate([-(w_inner/2 + wall_thickness + ear_width/2), 0, 0]) cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
-        translate([(w_inner/2 + wall_thickness + ear_width/2), 0, 0]) cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
+
+        // Backplate mounting screws
+        for (x_sign = [-1, 1])
+            translate([x_sign * (w_inner/2 + 12), backplate_y, 0])
+                rotate([-90, 0, 0])
+                    cylinder(h=20, d=screw_hole_dia, center=true);
+
+        // Vertical pin holes through both ears
+        for (x_sign = [-1, 1])
+            translate([x_sign * ear_x, 0, 0])
+                cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
     }
 }
 
-// --- PART 3: REMOVABLE HINGE PINS ---
-module print_pins() {
-    for (i = [-1, 1]) {
-        translate([i * 15, 0, 0]) {
-            cylinder(h = clamp_height + 6, d = pin_hole_dia - 0.4, center=true);
-            translate([0, 0, (clamp_height + 6)/2])
-                cylinder(h = 4, d = pin_hole_dia + 6, center=true);
+
+// ============================================================
+// PART 2 — FRONT CLAMP RETAINER
+// Middle knuckle slides into the centre slot of the back mount.
+// Height = knuckle_layer_h - pin_clearance → 0.2 mm gap each side.
+// ============================================================
+module front_clamp() {
+    difference() {
+        union() {
+            // Front half of collar (Y ≥ 0)
+            difference() {
+                raw_collar_profile(w_inner, d_inner, tank_corner_radius, wall_thickness);
+                translate([0, -bisect_half, 0])
+                    cube([w_inner*3, bisect_half*2, clamp_height + 40], center=true);
+            }
+
+            // Middle rounded knuckle blocks
+            for (x_sign = [-1, 1])
+                translate([x_sign * ear_x, 0, 0])
+                    ear_knuckle_profile(ear_width, ear_depth, middle_ear_h,
+                                        ear_corner_radius, x_sign);
         }
+
+        // Vertical pin holes through middle ears
+        for (x_sign = [-1, 1])
+            translate([x_sign * ear_x, 0, 0])
+                cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
     }
+}
+
+
+// ============================================================
+// PART 3 — REMOVABLE HINGE PINS
+//
+// Shaft: pin_hole_dia - 0.4 → 0.2 mm radial clearance in hole.
+// Cap: hull() between wide top disk and shaft diameter 1 mm below
+// produces a chamfered underside — no unsupported overhang lip.
+// ============================================================
+module print_pins() {
+    pin_shaft_d = pin_hole_dia - 0.4;
+    pin_len     = clamp_height + 6;
+    cap_d       = pin_hole_dia + 6;  // 11.5 mm head
+    cap_h       = 4;
+    taper_h     = 1;                 // blend zone below cap face
+
+    for (i = [-1, 1])
+        translate([i * 15, 0, 0]) {
+            cylinder(h=pin_len, d=pin_shaft_d, center=true);
+
+            // Tapered cap
+            translate([0, 0, pin_len / 2])
+                hull() {
+                    cylinder(h=0.01, d=cap_d,       center=false);
+                    translate([0, 0, -(cap_h - taper_h)])
+                        cylinder(h=0.01, d=pin_shaft_d, center=false);
+                }
+        }
 }
