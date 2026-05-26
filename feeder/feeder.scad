@@ -179,28 +179,33 @@ module front_clamp() {
 
 // ============================================================
 // PART 3 — REMOVABLE HINGE PINS
-//
-// Shaft: pin_hole_dia - 0.4 → 0.2 mm radial clearance in hole.
-// Cap: hull() between wide top disk and shaft diameter 1 mm below
-// produces a chamfered underside — no unsupported overhang lip.
+// Thumbtack profile: head wider at top than base, overhangs
+// neck — pinch the rim to pull.  No boolean ops, no artifacts.
 // ============================================================
 module print_pins() {
-    pin_shaft_d = pin_hole_dia - 0.4;
-    pin_len     = clamp_height + 6;
-    cap_d       = pin_hole_dia + 6;  // 11.5 mm head
-    cap_h       = 4;
-    taper_h     = 1;                 // blend zone below cap face
+    shaft_r = (pin_hole_dia - 0.4) / 2;
+    pin_len = clamp_height + 6;
+    neck_r  = 4;   // neck radius
+    neck_h  = 5;   // neck height
+    head_r  = 11;  // head outer radius
+    head_h  = 7;   // head height
+    chamfer = 2;   // top edge chamfer
 
-    for (i = [-1, 1])
-        translate([i * 15, 0, 0]) {
-            cylinder(h=pin_len, d=pin_shaft_d, center=true);
-
-            // Tapered cap
-            translate([0, 0, pin_len / 2])
-                hull() {
-                    cylinder(h=0.01, d=cap_d,       center=false);
-                    translate([0, 0, -(cap_h - taper_h)])
-                        cylinder(h=0.01, d=pin_shaft_d, center=false);
-                }
+    module one_pin() {
+        union() {
+            cylinder(r=shaft_r, h=pin_len);
+            translate([0, 0, pin_len]) {
+                cylinder(r=neck_r, h=neck_h);
+                translate([0, 0, neck_h])
+                    hull() {
+                        cylinder(r=neck_r+1,        h=0.01);
+                        translate([0,0,head_h-chamfer]) cylinder(r=head_r,          h=0.01);
+                        translate([0,0,head_h])          cylinder(r=head_r-chamfer,  h=0.01);
+                    }
+            }
         }
+    }
+
+    translate([-15, 0, 0]) one_pin();
+    translate([ 15, 0, 0]) one_pin();
 }
