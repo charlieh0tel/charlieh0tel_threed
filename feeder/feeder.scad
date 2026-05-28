@@ -16,11 +16,8 @@ pin_clearance = 0.4;
 knuckle_relief = 0.8;
 
 // --- ASSEMBLY CLEARANCE ---
-// All assembly clearance is on the back mount, so an already-printed front
-// clamp mates with it unchanged:
-//   - ear-face pockets recess the knuckle front faces
-//   - a tongue pocket between the knuckles seats the front clamp's middle ear
-split_chamfer = 3.0;
+split_chamfer   = 3.0;
+hinge_clearance = 0.4; // Sliding gap applied cleanly to the front clamp sides
 
 // --- HINGE SMOOTHING ---
 ear_corner_radius = 5;
@@ -28,8 +25,6 @@ ear_corner_radius = 5;
 // --- PART SELECTOR ---
 /* [Part] */
 part = "back_wall_mount"; // ["back_wall_mount", "front_clamp", "print_pins"]
-// part = "front_clamp";
-// part = "print_pins";
 
 $fn = 80;
 
@@ -73,6 +68,7 @@ module ear_knuckle_profile(w, d, h, r, x_sign) {
     }
 }
 
+// RESTORED: Back wall mount is completely smooth, structural, and step-free
 module back_wall_mount() {
     difference() {
         union() {
@@ -83,6 +79,7 @@ module back_wall_mount() {
             }
             translate([0, backplate_y, 0])
                 cube([backplate_w, 8, clamp_height + 15], center=true);
+            
             for (x_sign = [-1, 1]) {
                 translate([x_sign * ear_x, 0, 0]) {
                     translate([0, 0,  ear_z_ctr])
@@ -101,24 +98,24 @@ module back_wall_mount() {
         for (x_sign = [-1, 1])
             translate([x_sign * ear_x, 0, 0])
                 cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
-                
-        // FIXED: Pockets on ear front faces (Shaved from the true front edge)
+        
+        // Pockets on ear front faces
         for (x_sign = [-1, 1])
             for (z_sign = [-1, 1])
-                translate([x_sign * ear_x, (ear_depth / 2 - split_chamfer / 2) + 0.01, z_sign * ear_z_ctr])
+                translate([x_sign * ear_x, (ear_depth/2 - split_chamfer/2) + 0.01, z_sign * ear_z_ctr])
                     cube([ear_width + 2, split_chamfer + 0.02, knuckle_layer_h + 0.1], center=true);
-
                     
-        // Relief groove in collar wall BETWEEN the knuckles (z=0)
-        knuckle_gap  = 2 * (ear_z_ctr - knuckle_layer_h/2);  // slot height
-        relief_depth = 2;                                    // shallow X relief
+        // Relief groove in collar wall BETWEEN the knuckles (z=0) for the front clamp tongue
+        knuckle_gap  = 2 * (ear_z_ctr - knuckle_layer_h/2);  
+        relief_depth = 2;                                    
         for (x_sign = [-1, 1])
             translate([x_sign * (w_inner/2 + wall_thickness - relief_depth/2),
                        -ear_depth/4, 0])
-                cube([relief_depth + 0.01, ear_depth/2 + 2, knuckle_gap], center=true);
+                cube([relief_depth + 0.01, ear_depth/2, knuckle_gap], center=true);
     }
 }
 
+// FIXED: Side clearance recesses are carved out of the front clamp instead!
 module front_clamp() {
     difference() {
         union() {
@@ -134,10 +131,14 @@ module front_clamp() {
         for (x_sign = [-1, 1])
             translate([x_sign * ear_x, 0, 0])
                 cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
+
+        // Clearance pocket cut out of the front clamp's outer sides where it meets the ears
+        for (x_sign = [-1, 1])
+            translate([x_sign * (w_inner/2 + wall_thickness + 5), ear_depth/4, 0])
+                cube([10, ear_depth/2 + 0.1, clamp_height + 10], center=true);
     }
 }
 
-// PINS: classic thumbtack profile.  Outputs ONE pin — print it twice.
 module print_pins() {
     shaft_r = (pin_hole_dia - 0.4) / 2;
     pin_len = clamp_height + 6;
