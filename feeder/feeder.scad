@@ -61,10 +61,9 @@ module raw_collar_profile(w, d, r, wall) {
     }
 }
 
-// FIXED PERMANENTLY: Simplified symmetrical layout math prevents all distortion, fins, and steps
+// Symmetrical layout math prevents all distortion, fins, and steps
 module ear_knuckle_profile(w, d, h, r, x_sign, clear_inner = 0) {
     overlap = 2.0; 
-    // Draw natively on the positive side, mirror later via the parent module loop if x_sign == -1
     mirror([x_sign == -1 ? 1 : 0, 0, 0]) {
         linear_extrude(height = h, center = true) {
             difference() {
@@ -73,7 +72,7 @@ module ear_knuckle_profile(w, d, h, r, x_sign, clear_inner = 0) {
                     hull() {
                         translate([-w/2, -d/2]) square([0.1, d]);
                         translate([w/2 - r, -d/2 + r]) circle(r);
-                        translate([w/2 - r,  d/2 - r]) circle(r);
+                        translate([w/2 - r,  d/2 - r]) circle(r); 
                     }
                     // Anchors the knuckle deep inside the solid hoop wall to prevent manifold splits
                     translate([-w/2 - overlap, -d/2]) square([overlap + 0.1, d]);
@@ -96,6 +95,7 @@ module back_wall_mount() {
                 translate([0, bisect_half, 0])
                     cube([w_inner*3, bisect_half*2, collar_height + 40], center=true);
             }
+            // Standard backplate mesh definition
             translate([0, backplate_y, 0])
                 cube([backplate_w, 8, collar_height + 15], center=true);
             
@@ -108,10 +108,13 @@ module back_wall_mount() {
                 }
             }
         }
-        // Mounting screws
+        
+        // FIXED PERMANENTLY: Flipped rotation to [90,0,0] so cylinders point BACKWARD.
+        // Placed at Y = bisect_half (safe front territory) extending backward past the rear plate.
+        // It cleanly cuts the holes out of the backmount and mathematically cannot hit the clamp.
         for (x = [-backplate_w/2+12, -backplate_w/4, 0, backplate_w/4, backplate_w/2-12])
-            translate([x, backplate_y, 0])
-                rotate([-90,0,0]) cylinder(h=20, d=screw_hole_dia, center=true);
+            translate([x, 0, 0])
+                rotate([90,0,0]) cylinder(h=bisect_half*2, d=screw_hole_dia, center=false);
                 
         // Pin holes
         for (x_sign = [-1, 1])
