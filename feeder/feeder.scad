@@ -61,33 +61,27 @@ module raw_collar_profile(w, d, r, wall) {
     }
 }
 
-// FIXED: Clean 2D rectangle subtraction makes a perfectly sharp, square clearance notch
+// FIXED PERMANENTLY: Simplified symmetrical layout math prevents all distortion, fins, and steps
 module ear_knuckle_profile(w, d, h, r, x_sign, clear_inner = 0) {
     overlap = 2.0; 
-    linear_extrude(height = h, center = true) {
-        difference() {
-            // Main outer rounded knuckle body with secure wall overlap intersection
-            hull() {
-                translate([-x_sign * (w/2 + overlap), -d/2]) square([overlap + 0.1, d]);
-                translate([x_sign * (w/2 - r), -d/2 + r]) circle(r);
-                translate([x_sign * (w/2 - r),  d/2 - r]) circle(r);
-            }
-            // Traces a true rectangle from Y=0 onward to form a sharp, 90-degree square corner step
-            if (clear_inner > 0) {
-                if (x_sign == 1) {
-                    polygon([
-                        [-w/2 - overlap - 0.1, -0.01],     // Back corner inside wall
-                        [-w/2 + clear_inner,   -0.01],     // Sharp 90° corner exactly at Y=0
-                        [-w/2 + clear_inner,   d/2 + 0.1],  // Straight down the inner side wall
-                        [-w/2 - overlap - 0.1, d/2 + 0.1]  // Clean out out to empty space
-                    ]);
-                } else {
-                    polygon([
-                        [w/2 + overlap + 0.1, -0.01],      // Back corner inside wall
-                        [w/2 - clear_inner,   -0.01],      // Sharp 90° corner exactly at Y=0
-                        [w/2 - clear_inner,   d/2 + 0.1],  // Straight down the inner side wall
-                        [w/2 + overlap + 0.1, d/2 + 0.1]   // Clean out out to empty space
-                    ]);
+    // Draw natively on the positive side, mirror later via the parent module loop if x_sign == -1
+    mirror([x_sign == -1 ? 1 : 0, 0, 0]) {
+        linear_extrude(height = h, center = true) {
+            difference() {
+                // Combine the rounded ear profile with a rock-solid wall anchor pad
+                union() {
+                    hull() {
+                        translate([-w/2, -d/2]) square([0.1, d]);
+                        translate([w/2 - r, -d/2 + r]) circle(r);
+                        translate([w/2 - r,  d/2 - r]) circle(r);
+                    }
+                    // Anchors the knuckle deep inside the solid hoop wall to prevent manifold splits
+                    translate([-w/2 - overlap, -d/2]) square([overlap + 0.1, d]);
+                }
+                // Crisp 90-degree rectangle cutout for the slider clearance face (Y >= 0)
+                if (clear_inner > 0) {
+                    translate([-w/2 - overlap - 0.1, -0.01]) 
+                        square([overlap + clear_inner + 0.1, d/2 + 0.1]);
                 }
             }
         }
