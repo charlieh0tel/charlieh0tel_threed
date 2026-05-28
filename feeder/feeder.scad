@@ -96,26 +96,26 @@ module back_wall_mount() {
         for (x = [-backplate_w/2+12, -backplate_w/4, 0, backplate_w/4, backplate_w/2-12])
             translate([x, backplate_y, 0])
                 rotate([-90,0,0]) cylinder(h=20, d=screw_hole_dia, center=true);
+                
         // Pin holes
         for (x_sign = [-1, 1])
             translate([x_sign * ear_x, 0, 0])
                 cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
-        // Pockets on ear front faces — z-limited to ear positions only so the
-        // collar body is untouched.  Recesses each ear face by split_chamfer so
-        // the front clamp collar wall clears during Z-direction assembly.
+                
+        // FIXED: Pockets on ear front faces (Shaved from the true front edge)
         for (x_sign = [-1, 1])
             for (z_sign = [-1, 1])
-                translate([x_sign * ear_x, -split_chamfer/2, z_sign * ear_z_ctr])
-                    cube([ear_width - 0.1, split_chamfer, knuckle_layer_h - 0.1], center=true);
-        // Relief groove in collar wall BETWEEN the knuckles (z=0) for the
-        // front clamp tongue.  Shallow relief in X; runs back in Y to the
-        // rear of the knuckle; height spans the full inter-knuckle gap.
+                translate([x_sign * ear_x, (ear_depth / 2 - split_chamfer / 2) + 0.01, z_sign * ear_z_ctr])
+                    cube([ear_width + 2, split_chamfer + 0.02, knuckle_layer_h + 0.1], center=true);
+
+                    
+        // Relief groove in collar wall BETWEEN the knuckles (z=0)
         knuckle_gap  = 2 * (ear_z_ctr - knuckle_layer_h/2);  // slot height
         relief_depth = 2;                                    // shallow X relief
         for (x_sign = [-1, 1])
             translate([x_sign * (w_inner/2 + wall_thickness - relief_depth/2),
                        -ear_depth/4, 0])
-                cube([relief_depth + 0.01, ear_depth/2, knuckle_gap - 0.1], center=true);
+                cube([relief_depth + 0.01, ear_depth/2 + 2, knuckle_gap], center=true);
     }
 }
 
