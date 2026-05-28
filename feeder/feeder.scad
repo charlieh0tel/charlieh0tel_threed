@@ -17,7 +17,7 @@ knuckle_relief = 0.8;
 
 // --- ASSEMBLY CLEARANCE ---
 split_chamfer   = 3.0;
-hinge_clearance = 0.4; // Sliding gap applied cleanly to the front clamp sides
+hinge_clearance = 0.4; // The exact horizontal gap needed for a clean sliding fit
 
 // --- HINGE SMOOTHING ---
 ear_corner_radius = 5;
@@ -41,6 +41,9 @@ ear_z_ctr       = knuckle_layer_h + knuckle_relief / 2;
 backplate_y     = -(d_inner / 2 + wall_thickness + backplate_offset);
 backplate_w     = w_inner + wall_thickness*2 + 40;
 
+// Dynamic collar height matching the knuckle vertical thresholds
+collar_height   = ear_z_ctr * 2 + knuckle_layer_h; 
+
 if (part == "back_wall_mount") back_wall_mount();
 if (part == "front_clamp")     front_clamp();
 if (part == "print_pins")      print_pins();
@@ -48,44 +51,66 @@ if (part == "print_pins")      print_pins();
 module raw_collar_profile(w, d, r, wall) {
     difference() {
         minkowski() {
-            cube([w + wall*2 - r*2, d + wall*2 - r*2, clamp_height - 1], center=true);
+            cube([w + wall*2 - r*2, d + wall*2 - r*2, collar_height], center=true);
             cylinder(r=r, h=0.001, center=true);
         }
         minkowski() {
-            cube([w - r*2, d - r*2, clamp_height + 5], center=true);
+            cube([w - r*2, d - r*2, collar_height + 5], center=true);
             cylinder(r=r, h=0.001, center=true);
         }
     }
 }
 
-module ear_knuckle_profile(w, d, h, r, x_sign) {
+// FIXED: Clean 2D rectangle subtraction makes a perfectly sharp, square clearance notch
+module ear_knuckle_profile(w, d, h, r, x_sign, clear_inner = 0) {
+    overlap = 2.0; 
     linear_extrude(height = h, center = true) {
-        hull() {
-            translate([-x_sign * w/2, -d/2]) square([0.1, d]);
-            translate([x_sign * (w/2 - r), -d/2 + r]) circle(r);
-            translate([x_sign * (w/2 - r),  d/2 - r]) circle(r);
+        difference() {
+            // Main outer rounded knuckle body with secure wall overlap intersection
+            hull() {
+                translate([-x_sign * (w/2 + overlap), -d/2]) square([overlap + 0.1, d]);
+                translate([x_sign * (w/2 - r), -d/2 + r]) circle(r);
+                translate([x_sign * (w/2 - r),  d/2 - r]) circle(r);
+            }
+            // Traces a true rectangle from Y=0 onward to form a sharp, 90-degree square corner step
+            if (clear_inner > 0) {
+                if (x_sign == 1) {
+                    polygon([
+                        [-w/2 - overlap - 0.1, -0.01],     // Back corner inside wall
+                        [-w/2 + clear_inner,   -0.01],     // Sharp 90° corner exactly at Y=0
+                        [-w/2 + clear_inner,   d/2 + 0.1],  // Straight down the inner side wall
+                        [-w/2 - overlap - 0.1, d/2 + 0.1]  // Clean out out to empty space
+                    ]);
+                } else {
+                    polygon([
+                        [w/2 + overlap + 0.1, -0.01],      // Back corner inside wall
+                        [w/2 - clear_inner,   -0.01],      // Sharp 90° corner exactly at Y=0
+                        [w/2 - clear_inner,   d/2 + 0.1],  // Straight down the inner side wall
+                        [w/2 + overlap + 0.1, d/2 + 0.1]   // Clean out out to empty space
+                    ]);
+                }
+            }
         }
     }
 }
 
-// RESTORED: Back wall mount is completely smooth, structural, and step-free
 module back_wall_mount() {
     difference() {
         union() {
             difference() {
                 raw_collar_profile(w_inner, d_inner, tank_corner_radius, wall_thickness);
                 translate([0, bisect_half, 0])
-                    cube([w_inner*3, bisect_half*2, clamp_height + 40], center=true);
+                    cube([w_inner*3, bisect_half*2, collar_height + 40], center=true);
             }
             translate([0, backplate_y, 0])
-                cube([backplate_w, 8, clamp_height + 15], center=true);
+                cube([backplate_w, 8, collar_height + 15], center=true);
             
             for (x_sign = [-1, 1]) {
                 translate([x_sign * ear_x, 0, 0]) {
                     translate([0, 0,  ear_z_ctr])
-                        ear_knuckle_profile(ear_width, ear_depth, knuckle_layer_h, ear_corner_radius, x_sign);
+                        ear_knuckle_profile(ear_width, ear_depth, knuckle_layer_h, ear_corner_radius, x_sign, hinge_clearance);
                     translate([0, 0, -ear_z_ctr])
-                        ear_knuckle_profile(ear_width, ear_depth, knuckle_layer_h, ear_corner_radius, x_sign);
+                        ear_knuckle_profile(ear_width, ear_depth, knuckle_layer_h, ear_corner_radius, x_sign, hinge_clearance);
                 }
             }
         }
@@ -97,7 +122,7 @@ module back_wall_mount() {
         // Pin holes
         for (x_sign = [-1, 1])
             translate([x_sign * ear_x, 0, 0])
-                cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
+                cylinder(h=collar_height + 10, d=pin_hole_dia, center=true);
         
         // Pockets on ear front faces
         for (x_sign = [-1, 1])
@@ -115,33 +140,27 @@ module back_wall_mount() {
     }
 }
 
-// FIXED: Side clearance recesses are carved out of the front clamp instead!
 module front_clamp() {
     difference() {
         union() {
             difference() {
                 raw_collar_profile(w_inner, d_inner, tank_corner_radius, wall_thickness);
                 translate([0, -bisect_half, 0])
-                    cube([w_inner*3, bisect_half*2, clamp_height + 40], center=true);
+                    cube([w_inner*3, bisect_half*2, collar_height + 40], center=true);
             }
             for (x_sign = [-1, 1])
                 translate([x_sign * ear_x, 0, 0])
-                    ear_knuckle_profile(ear_width, ear_depth, middle_ear_h, ear_corner_radius, x_sign);
+                    ear_knuckle_profile(ear_width, ear_depth, middle_ear_h, ear_corner_radius, x_sign, 0);
         }
         for (x_sign = [-1, 1])
             translate([x_sign * ear_x, 0, 0])
-                cylinder(h=clamp_height + 10, d=pin_hole_dia, center=true);
-
-        // Clearance pocket cut out of the front clamp's outer sides where it meets the ears
-        for (x_sign = [-1, 1])
-            translate([x_sign * (w_inner/2 + wall_thickness + 5), ear_depth/4, 0])
-                cube([10, ear_depth/2 + 0.1, clamp_height + 10], center=true);
+                cylinder(h=collar_height + 10, d=pin_hole_dia, center=true);
     }
 }
 
 module print_pins() {
     shaft_r = (pin_hole_dia - 0.4) / 2;
-    pin_len = clamp_height + 6;
+    pin_len = collar_height + 6;
     base_r  = 7; waist_r = 4; top_r = 10;
     bell_h  = 4; waist_h = 8; neck_h = 5; top_h = 4; edge_r = 1.5;
     w_bell  = waist_r - base_r;
@@ -155,7 +174,7 @@ module print_pins() {
     a1_neck = atan2(neck_h, top_r - cx_neck);
     rotate_extrude($fn=80)
         polygon(concat(
-            [[0,0],[shaft_r,0],[shaft_r,pin_len],[base_r,pin_len]],
+            [[shaft_r,0],[shaft_r,pin_len],[base_r,pin_len]], 
             [for(a=[0:2:a1_bell])  [cx_bell+R_bell*cos(a), pin_len+R_bell*sin(a)]],
             [[waist_r, pin_len+bell_h+waist_h]],
             [for(a=[180:-2:a1_neck]) [cx_neck+R_neck*cos(a), pin_len+z_wt+R_neck*(sin(a)-sin(180))]],
