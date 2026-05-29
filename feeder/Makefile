@@ -1,13 +1,13 @@
 OPENSCAD := openscad
 
-SCAD       := feeder.scad
-PARTS      := back_wall_mount front_clamp print_pins
-STL_FILES  := $(addprefix feeder_,$(addsuffix .stl,$(PARTS)))
+LIBS      := params.scad collar.scad ear_knuckle.scad
+TOP_SCADS := back_clamp.scad front_clamp.scad pin.scad
+STL_FILES := $(TOP_SCADS:.scad=.stl)
 
 all: $(STL_FILES)
 
-feeder_%.stl: $(SCAD)
-	$(OPENSCAD) --export-format binstl -D 'part="$*"' -o $@ $<
+%.stl: %.scad $(LIBS)
+	$(OPENSCAD) --export-format binstl -o $@ $<
 
 clean:
 	rm -f $(STL_FILES)
