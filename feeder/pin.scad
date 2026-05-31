@@ -4,7 +4,7 @@ print_pin();
 
 module print_pin() {
     shaft_r = (pin_hole_dia - 0.4) / 2;
-    pin_len = collar_height + 6;
+    pin_len = collar_height + 15;
     base_r  = 7; waist_r = 4; top_r = 10;
     bell_h  = 4; waist_h = 8; neck_h = 5; top_h = 4; edge_r = 1.5;
     w_bell  = waist_r - base_r;
