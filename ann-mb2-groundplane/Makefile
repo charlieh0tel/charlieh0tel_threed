@@ -13,7 +13,9 @@ CAP_FILES  := $(OUT)/mast_cap.step \
               $(OUT)/disc_120mm.step \
               $(OUT)/assembly.step
 
-all: $(DISC_FILES) $(CAP_FILES)
+BOM := docs/BOM.md
+
+all: $(DISC_FILES) $(CAP_FILES) $(BOM)
 
 # Each script writes all of its files in one run (grouped targets, GNU Make >= 4.3).
 $(DISC_FILES) &: src/generate.py
@@ -22,6 +24,10 @@ $(DISC_FILES) &: src/generate.py
 # cap.py takes every dimension from generate.py.
 $(CAP_FILES) &: src/cap.py src/generate.py
 	$(UV) run src/cap.py --out $(OUT)
+
+# The BOM is tracked in git (it is a document, not a fabrication file), so clean leaves it.
+$(BOM): src/generate.py
+	$(PYTHON) src/generate.py --bom $@
 
 check:
 	$(PYTHON) src/generate.py --check

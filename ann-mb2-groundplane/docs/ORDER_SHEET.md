@@ -8,16 +8,18 @@ contain only cut paths (no notes, dimensions, borders, or title blocks).
 - https://sendcutsend.com/cnc-guidelines
 
 File: `out/disc_120mm_cut_only.dxf`
-Material: 0.125" 5052 aluminum (or 0.125" 304 stainless). Quantity 1.
+Material: 0.060" 304 stainless steel. Quantity 1.
 
 | Holes | Location (mm, origin at center, +X = north) | Operation |
 |---|---|---|
 | 2 antenna holes, ø4.5 | (0, +47.5), (0, −47.5) | Cut only |
 
-No hardware insertion, countersinking, tapping, or bending. This has not been run through
-their configurator; confirm the upload preview reports ø120 mm.
+No hardware insertion, countersinking, tapping, bending, or finishing.
 
-Finish: anodize aluminum, or leave bare and paint. Stainless needs none.
+Status: ordered 2026-11-22. On arrival, check it measures ø120 mm and that the holes line
+up with the antenna's ears.
+
+Finish: none.
 
 ## Part 2: mast cap (3D print)
 
@@ -26,7 +28,7 @@ real tube has not been measured, so print the fit ring before the cap.
 
 | File | Use |
 |---|---|
-| `out/mast_cap_fit_ring.stl` | Print first. 12 tall slice of the socket, a few minutes of printing. |
+| `out/mast_cap_fit_ring.stl` | Print first. 12 tall slice of the socket: bore, lead-in, and slit only. |
 | `out/mast_cap_print.stl` | The cap, already in print orientation (top plate on the bed). |
 | `out/mast_cap.step` | Same part in the assembly frame, for CAD or a print service. |
 
@@ -38,10 +40,14 @@ Procedure:
 3. If it is tight or loose, change `CAP_FIT_CLEAR` (0.4 as drawn), regenerate, reprint the ring.
 4. Print the cap.
 
-Suggested settings, not yet tested: ASA or PETG (not PLA outdoors), 4 perimeters, 40% or
-more infill, 0.2 layers, no supports. Layers are horizontal, so the arms bend across the
-layers rather than peeling them, and the clamp hoop stress runs along the perimeters.
+Printer: Prusa MK3.5S. The cap is about 62 × 111 × 54 in print orientation, well inside
+the bed.
+
+Material: PETG (owner's choice). Suggested settings, not yet tested: 4 perimeters, 40% or
+more infill, 0.2 layers, no supports. Layers are horizontal,
+so the arms bend across the layers rather than peeling them, and the clamp hoop stress
+runs along the perimeters.
 
 ## Buy elsewhere
 
-See the hardware table in DESIGN.md: three M4 screws, three washers, three nyloc nuts, two small zip ties.
+See `docs/BOM.md`.

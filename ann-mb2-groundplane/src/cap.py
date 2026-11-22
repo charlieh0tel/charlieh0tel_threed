@@ -300,7 +300,8 @@ def verify(cap, ring, disc, mast, antenna, cable):
     chk("gussets feather out at both ends", volume(cap.intersect(past)), volume(cap.intersect(past)) < 1e-6)
 
     v = volume(cap)
-    print(f"cap volume {v / 1000:.1f} cm^3, about {v / 1000 * 1.07:.0f} g solid in ASA (less at normal infill)")
+    print(f"cap volume {v / 1000:.1f} cm^3, about {v / 1000 * G.PRINT_DENSITY:.0f} g solid in "
+          f"{G.PRINT_MATERIAL} (less at normal infill)")
     all_ok = True
     for name, value, ok in results:
         all_ok &= ok
