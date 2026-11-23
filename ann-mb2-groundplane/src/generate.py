@@ -31,7 +31,7 @@ import os
 # Disc
 DISC_DIA = 120.0            # datasheet reference ground plane, do not change casually
 T = 1.524                   # sheet thickness, 0.060 in
-ANT_HOLE_SPACING = 95.0     # ANN-MB2 ear hole center-to-center (datasheet Fig. 1, +/-0.5). Measured 95 by the owner.
+ANT_HOLE_SPACING = 95.0     # ANN-MB2 ear hole center-to-center (datasheet Fig. 1, +/-0.5). Measured.
 M4_CLEAR = 4.5              # M4 clearance hole, disc and cap
 ANT_BODY = 84.0             # antenna body is 84 x 84 (reference outline only)
 ANT_EAR_R = 6.75            # (108.5 - 95.0) / 2, reference outline only
@@ -50,8 +50,8 @@ CABLE_BEND_R = 15.0         # bend radius used for the modeled cable route (assu
 CABLE_LOOP_X = 58.0         # where the cable starts curving down over the disc edge, from the mast axis
 CABLE_TAIL = 25.0           # cable shown continuing below the socket mouth
 
-# Mast. CRITICAL: the cap socket is printed to this. Owner's decision: use the nominal
-# 1-1/4 in OD, not a caliper measurement. The fit ring absorbs the difference.
+# Mast. The cap socket is printed to this. Nominal, not measured; tune CAP_FIT_CLEAR
+# with the fit ring.
 MAST_OD = 31.75             # 1-1/4 in nominal
 
 # Printed mast cap
@@ -83,8 +83,8 @@ TIE_SLOT_H = 3.5            # tie slot, vertical size (for a 2.5 wide zip tie)
 CAP_BOTTOM_R = 1.5          # round on the outer edges at the bottom (socket mouth end) of the cap
 CAP_LEAD_IN = 1.0           # chamfer at the socket mouth
 FIT_RING_H = 12.0           # height of the fit-test ring
-PRINT_MATERIAL = "PETG"     # owner's choice
-DISC_MATERIAL = "304 stainless steel"       # owner's choice
+PRINT_MATERIAL = "PETG"
+DISC_MATERIAL = "304 stainless steel"
 DISC_STATUS = "Ordered from SendCutSend 2026-11-22"
 PRINT_DENSITY = 1.27        # g/cm^3, for the mass estimate only
 
@@ -376,7 +376,6 @@ def write_bom(path):
     """Bill of materials as Markdown. Quantities and screw lengths follow the parameters."""
     g = cap_geometry()
     n_ties = len(CAP_LUG_Z)
-    same = g["ant_screw"] == g["pinch_screw"]
     lines = [
         "# Bill of materials",
         "",
@@ -393,8 +392,7 @@ def write_bom(path):
         f"`out/disc_120mm_cut_only.dxf` | {DISC_STATUS} |",
         f"| 1 | Mast cap | {PRINT_MATERIAL} | 3D print | `out/mast_cap_print.stl` | Not printed |",
         "",
-        f"Print `out/mast_cap_fit_ring.stl` in the same {PRINT_MATERIAL} first to tune the fit. It is a test "
-        "piece, not part of the assembly.",
+        f"Test piece, not in the assembly: `out/mast_cap_fit_ring.stl`, {PRINT_MATERIAL}.",
         "",
         "## Hardware to buy",
         "",
@@ -406,16 +404,6 @@ def write_bom(path):
         f"| 3 | M4 nyloc nut, {M4_NUT_AF:g} across flats, {M4_NYLOC_H:g} high, A2 stainless | "
         "Two captive under the cap arms, one in the clamp ear |",
         f"| {n_ties} | Zip tie, {TIE_SLOT_H - 1:g} wide, black UV-resistant | Antenna cable to the cap's tie lug |",
-        "",
-        "Notes:",
-        "",
-    ]
-    if same:
-        lines.append(f"- All three screws are M4 × {g['ant_screw']}. Three of one head type would also work.")
-    lines += [
-        "- Nut size matters: the hex pockets are printed for the size above. Nyloc heights vary by "
-        "standard; a thinner nut is fine, a taller one stands proud.",
-        "- No liquid threadlocker: it can crack the antenna housing and the printed cap.",
         "",
         "## Already on hand",
         "",

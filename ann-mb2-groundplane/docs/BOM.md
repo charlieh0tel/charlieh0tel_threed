@@ -11,7 +11,7 @@ Dimensions in mm unless marked.
 | 1 | Ground plane disc, ø120, 2 × ø4.5 holes 95 apart | 304 stainless steel, 0.060" (1.524), no finish | SendCutSend | `out/disc_120mm_cut_only.dxf` | Ordered from SendCutSend 2026-11-22 |
 | 1 | Mast cap | PETG | 3D print | `out/mast_cap_print.stl` | Not printed |
 
-Print `out/mast_cap_fit_ring.stl` in the same PETG first to tune the fit. It is a test piece, not part of the assembly.
+Test piece, not in the assembly: `out/mast_cap_fit_ring.stl`, PETG.
 
 ## Hardware to buy
 
@@ -22,12 +22,6 @@ Print `out/mast_cap_fit_ring.stl` in the same PETG first to tune the fit. It is 
 | 3 | M4 flat washer, 9 OD, A2 stainless | One under each screw head |
 | 3 | M4 nyloc nut, 7 across flats, 5 high, A2 stainless | Two captive under the cap arms, one in the clamp ear |
 | 2 | Zip tie, 2.5 wide, black UV-resistant | Antenna cable to the cap's tie lug |
-
-Notes:
-
-- All three screws are M4 × 20. Three of one head type would also work.
-- Nut size matters: the hex pockets are printed for the size above. Nyloc heights vary by standard; a thinner nut is fine, a taller one stands proud.
-- No liquid threadlocker: it can crack the antenna housing and the printed cap.
 
 ## Already on hand
 

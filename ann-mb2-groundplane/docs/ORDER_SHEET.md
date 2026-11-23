@@ -1,53 +1,23 @@
 # Order and print sheet
 
-## Part 1: disc (SendCutSend)
+Hardware is in `docs/BOM.md`.
 
-SendCutSend does not read drawing callouts, and their file guidelines require uploads to
-contain only cut paths (no notes, dimensions, borders, or title blocks).
+## Disc (SendCutSend)
 
-- https://sendcutsend.com/cnc-guidelines
+- File: `out/disc_120mm_cut_only.dxf`. Cut paths only.
+- Material: 0.060" 304 stainless. Quantity 1. No finish, no added operations.
+- Two ø4.5 holes at (0, ±47.5), origin at center.
+- Ordered 2026-11-22.
 
-File: `out/disc_120mm_cut_only.dxf`
-Material: 0.060" 304 stainless steel. Quantity 1.
-
-| Holes | Location (mm, origin at center, +X = north) | Operation |
-|---|---|---|
-| 2 antenna holes, ø4.5 | (0, +47.5), (0, −47.5) | Cut only |
-
-No hardware insertion, countersinking, tapping, bending, or finishing.
-
-Status: ordered 2026-11-22. On arrival, check it measures ø120 mm and that the holes line
-up with the antenna's ears.
-
-Finish: none.
-
-## Part 2: mast cap (3D print)
-
-The files in `out/` use the nominal 1-1/4" (31.75) mast OD, by the owner's decision. The
-real tube has not been measured, so print the fit ring before the cap.
+## Mast cap (3D print)
 
 | File | Use |
 |---|---|
-| `out/mast_cap_fit_ring.stl` | Print first. 12 tall slice of the socket: bore, lead-in, and slit only. |
-| `out/mast_cap_print.stl` | The cap, already in print orientation (top plate on the bed). |
-| `out/mast_cap.step` | Same part in the assembly frame, for CAD or a print service. |
+| `out/mast_cap_fit_ring.stl` | 12 tall slice of the socket: bore, lead-in, slit. Print first. |
+| `out/mast_cap_print.stl` | The cap, in print orientation (top face on the bed). |
+| `out/mast_cap.step` | The cap in the assembly frame. |
 
-Procedure:
-
-1. Run `make` if any parameter has changed.
-2. Print the fit ring in the final material and on the final printer. It should slide on
-   by hand without rocking, and grip when the slit is squeezed.
-3. If it is tight or loose, change `CAP_FIT_CLEAR` (0.4 as drawn), regenerate, reprint the ring.
-4. Print the cap.
-
-Printer: Prusa MK3.5S. The cap is about 62 × 111 × 54 in print orientation, well inside
-the bed.
-
-Material: PETG (owner's choice). Suggested settings, not yet tested: 4 perimeters, 40% or
-more infill, 0.2 layers, no supports. Layers are horizontal,
-so the arms bend across the layers rather than peeling them, and the clamp hoop stress
-runs along the perimeters.
-
-## Buy elsewhere
-
-See `docs/BOM.md`.
+- PETG, Prusa MK3.5S. About 62 × 111 × 54 in print orientation. No supports intended.
+- Untested starting point: 4 perimeters, 40% infill, 0.2 layers.
+- The bore is the nominal mast OD plus `CAP_FIT_CLEAR` (0.4). Adjust that from the fit
+  ring, then `make`.
