@@ -95,8 +95,9 @@ Modeled in `src/cap.py` (CadQuery).
 
 The cap is 111 across the arms and 54 tall, with nothing beyond r = 55.5.
 
-Printed top face down, no supports intended; the pinch hole, nut pocket, tie slots, and
-keyhole shoulders bridge. `out/mast_cap_print.stl` is in that orientation, about
+Printed top face down, no supports intended; the pinch hole, tie slots, and keyhole
+shoulders bridge. The pinch nut pocket has its corners up and down, so its roof is two
+slopes. `out/mast_cap_print.stl` is in that orientation, about
 62 × 111 × 54. `out/mast_cap_fit_ring.stl` is a 12 tall slice of the socket.
 Slicer settings: `print/prusaslicer_config.ini` (PrusaSlicer 2.9.6; 0.15 layers,
 5 perimeters, 40% gyroid).

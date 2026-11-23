@@ -147,6 +147,8 @@ def build_cap():
                     .extrude(g["ear_half"] + 1, both=True))
     hexbar = (cq.Workplane("XZ").center(px, pz).polygon(6, g["pocket_ac"])
               .extrude(g["ear_half"] + 1, both=True))
+    # Corners up and down, so the pocket roof prints as two slopes, not a bridge.
+    hexbar = hexbar.rotate((px, 0, pz), (px, 1, pz), 30)
     y_seat = g["ear_half"] - G.CAP_PINCH_NUT_DEPTH
     body = body.cut(hexbar.intersect(_box(px - 10, px + 10, y_seat, g["ear_half"] + 2, pz - 10, pz + 10)))
     return body
