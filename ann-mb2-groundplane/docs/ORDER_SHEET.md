@@ -18,6 +18,7 @@ Hardware is in `docs/BOM.md`.
 | `out/mast_cap.step` | The cap in the assembly frame. |
 
 - PETG, Prusa MK3.5S. About 62 × 111 × 54 in print orientation. No supports intended.
-- Untested starting point: 4 perimeters, 40% infill, 0.2 layers.
+- Slicer settings: `print/prusaslicer_config.ini` (PrusaSlicer 2.9.6; 0.15 layers, 5 perimeters,
+  40% gyroid). Untested.
 - The bore is the nominal mast OD plus `CAP_FIT_CLEAR` (0.4). Adjust that from the fit
   ring, then `make`.

@@ -40,6 +40,7 @@ Read these first:
 | `out/mast_cap_fit_ring.stl` | Short slice of the socket. Print this first to tune the fit. |
 | `out/mast_cap_print.stl` | Cap in print orientation (top plate on the bed). |
 | `out/mast_cap.step`, `out/disc_120mm.step`, `out/assembly.step` | Solids in the assembly frame. The assembly also includes a reference mast tube and a rough antenna with its cable routed to the tie lug; the antenna housing shape is guessed, only its overall sizes come from the datasheet. |
+| `print/prusaslicer_config.ini` | PrusaSlicer config for the cap and fit ring: PETG, MK3.5S, 0.4 nozzle. |
 | `ref/ann-mb2_datasheet_fig1_mechanical_drawing.png` | Datasheet Figure 1, the source for all antenna dimensions. |
 | `third_party/` | The u-blox datasheet PDF, with a `NOTICE.md` stating whose it is. |
 
